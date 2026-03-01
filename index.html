@@ -8,28 +8,46 @@
   <!-- 引入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- 引入 Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 
   <style>
-    /* 自定义动画 */
+    /* 呼吸动效 */
     @keyframes breathe {
       0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(234, 88, 12, 0.4); }
       50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(234, 88, 12, 0.8); }
     }
-    .btn-breathe {
-      animation: breathe 2s infinite ease-in-out;
-    }
+    .btn-breathe { animation: breathe 2s infinite ease-in-out; }
     
-    @keyframes floatUp {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-50%); }
+    /* 扫光动效 (高亮按钮用) */
+    @keyframes sweep {
+      0% { transform: translateX(-150%) skewX(-15deg); }
+      100% { transform: translateX(250%) skewX(-15deg); }
     }
-    .animate-float-up {
-      animation: floatUp 15s linear infinite;
+    .animate-sweep { animation: sweep 2.5s infinite ease-in-out; }
+
+    /* 水平照片墙向左无缝滚动 */
+    @keyframes scrollHorizontal {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
     }
-    .animate-float-up:hover {
-      animation-play-state: paused;
+    .animate-scroll-x { 
+      animation: scrollHorizontal 40s linear infinite; 
+      display: flex;
+      width: max-content;
     }
+    .animate-scroll-x:hover { animation-play-state: paused; }
+
+    /* 水平照片墙向右无缝滚动 */
+    @keyframes scrollHorizontalReverse {
+      0% { transform: translateX(-50%); }
+      100% { transform: translateX(0); }
+    }
+    .animate-scroll-x-reverse { 
+      animation: scrollHorizontalReverse 45s linear infinite; 
+      display: flex;
+      width: max-content;
+    }
+    .animate-scroll-x-reverse:hover { animation-play-state: paused; }
 
     /* 3D 翻转卡片基础样式 */
     .perspective-1000 { perspective: 1000px; }
@@ -40,42 +58,57 @@
     .backface-hidden { backface-visibility: hidden; }
     .rotate-y-180 { transform: rotateY(180deg); }
     
-    /* 隐藏滚动条但保留滚动功能 */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
+    /* 隐藏滚动条 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* 灵魂微光动效与渐显 */
+    @keyframes soulGlow {
+      0%, 100% { opacity: 0.8; transform: scale(1); filter: drop-shadow(0 0 10px rgba(168,85,247,0.5)); }
+      50% { opacity: 1; transform: scale(1.02); filter: drop-shadow(0 0 25px rgba(168,85,247,0.9)); }
     }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    .animate-soul-glow { animation: soulGlow 3s infinite ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
+    .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
   </style>
 </head>
-<body class="w-full min-h-screen bg-gradient-to-b from-[#0a0f24] via-[#3b1f50] to-[#e65c00] text-white font-sans overflow-x-hidden">
+<body id="app-body" class="w-full min-h-screen bg-gradient-to-b from-[#0a0f24] via-[#3b1f50] to-[#e65c00] text-white font-sans overflow-x-hidden relative bg-cover bg-center">
+
+  <!-- ================= 顶部固定 Logo ================= -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[#0a0f24]/80 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-6xl mx-auto px-8 py-4 flex items-center">
+      <span id="txt-logo" class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 font-extrabold text-2xl tracking-widest italic"></span>
+    </div>
+  </header>
 
   <!-- PC端主容器：限制最大宽度为 max-w-6xl 并居中 -->
   <div class="max-w-6xl mx-auto bg-black/10 min-h-screen shadow-2xl relative pb-28">
     
     <!-- ================= 模块一：头屏主视觉 ================= -->
-    <section class="relative pt-20 pb-24 px-8 overflow-hidden flex flex-col items-center text-center">
+    <section class="relative pt-32 pb-24 px-8 overflow-hidden flex flex-col items-center text-center">
       <!-- 背景光晕 -->
       <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[500px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-400/40 via-purple-900/20 to-transparent blur-3xl -z-10"></div>
       
       <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm mb-6 text-sm text-orange-200">
         <i data-lucide="sparkles" class="w-4 h-4"></i>
-        <span>2026考研首发季</span>
+        <span id="txt-hero-tagline"></span>
       </div>
 
-      <h1 class="text-5xl md:text-6xl font-extrabold mb-4 leading-tight tracking-wide drop-shadow-[0_0_15px_rgba(255,165,0,0.5)]">
-        <span class="block text-transparent bg-clip-text bg-gradient-to-r from-orange-300 to-yellow-500 mb-2">只争朝夕</span>
-        网易有道考研开学季
+      <h1 class="text-5xl md:text-6xl font-extrabold mb-5 leading-tight tracking-wide drop-shadow-[0_0_15px_rgba(255,165,0,0.5)]">
+        <span id="txt-hero-mainTitle" class="block text-transparent bg-clip-text bg-gradient-to-r from-orange-300 to-yellow-500 mb-2"></span>
+        <span id="txt-hero-subTitle"></span>
       </h1>
-      <p class="text-purple-200 text-lg mb-10 font-light tracking-widest">破晓已至，你的上岸之路从此刻启程！</p>
+      <!-- 副标题 -->
+      <p id="txt-hero-desc" class="text-orange-200 text-xl mb-12 font-medium tracking-widest bg-white/5 px-6 py-2 rounded-full border border-orange-500/30"></p>
 
       <!-- 紧迫感组件：倒计时 -->
       <div class="w-full max-w-lg bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-xl">
         <div class="text-sm text-gray-300 mb-4 flex justify-center items-center gap-2">
           <i data-lucide="clock" class="text-orange-400 w-5 h-5"></i>
-          距开学季超值福利下线仅剩
+          <span id="txt-timer-label"></span>
         </div>
         <div class="flex justify-center gap-4 text-4xl font-mono font-bold text-white">
           <div class="flex flex-col items-center"><span id="t-days" class="bg-white/10 rounded-lg px-4 py-3 min-w-[70px]">00</span><span class="text-xs text-gray-400 mt-2 font-sans">天</span></div>
@@ -91,217 +124,159 @@
 
     <!-- ================= 模块二：互动引流 (MBTI) ================= -->
     <section class="px-8 py-12">
-      <div class="max-w-3xl mx-auto bg-gradient-to-br from-indigo-900/80 to-purple-900/80 rounded-3xl p-10 border border-purple-500/30 shadow-[0_0_40px_rgba(109,40,217,0.3)] text-center relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl"></div>
+      <div class="max-w-3xl mx-auto bg-gradient-to-br from-[#120c18]/90 to-[#2d1b4e]/90 rounded-3xl p-10 border border-purple-500/40 shadow-[0_0_40px_rgba(109,40,217,0.3)] text-center relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-purple-500/30 rounded-full blur-[60px]"></div>
+        <div class="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/20 rounded-full blur-[50px]"></div>
         
-        <h2 class="text-3xl font-bold mb-4 flex items-center justify-center gap-2">
-          <i data-lucide="target" class="text-pink-400 w-8 h-8"></i>
-          考研界MBTI大揭秘
+        <h2 class="text-3xl font-bold mb-4 flex items-center justify-center gap-3 animate-soul-glow">
+          <i data-lucide="aperture" class="text-purple-400 w-8 h-8"></i>
+          <span id="txt-mbti-title"></span>
         </h2>
-        <p class="text-lg text-purple-200 mb-8 leading-relaxed">
-          是J型规划大师，还是P型极限冲刺王？<br/>测一测，获取你的专属高分复习策略！
-        </p>
+        <p id="txt-mbti-desc" class="text-lg text-purple-200 mb-8 leading-relaxed"></p>
 
         <button 
           onclick="openMbtiModal()"
-          class="btn-breathe max-w-md mx-auto w-full py-5 rounded-full bg-gradient-to-r from-pink-500 to-orange-500 text-white font-bold text-xl shadow-lg flex justify-center items-center gap-3 transition-transform active:scale-95 cursor-pointer"
+          class="btn-breathe max-w-md mx-auto w-full py-5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold text-xl shadow-[0_0_30px_rgba(168,85,247,0.4)] flex justify-center items-center gap-2 transition-transform active:scale-95 cursor-pointer relative overflow-hidden"
         >
-          👉 测测你的考研人格
+          <div class="absolute inset-0 bg-white/20 hover:bg-transparent transition-colors pointer-events-none"></div>
+          <i data-lucide="zap" class="w-6 h-6"></i>
+          <span id="txt-mbti-btn"></span>
         </button>
         <p class="text-sm text-purple-300/80 mt-6 flex items-center justify-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span>
-          已有 <span class="font-mono text-white text-lg">15,392</span> 名研友完成测试并领取规划
+          已有 <span id="txt-mbti-count" class="font-mono text-white text-lg"></span> 名研友完成唤醒
         </p>
       </div>
     </section>
 
-    <!-- ================= 模块三：品牌背书 ================= -->
+    <!-- ================= 模块三：口碑背书 (照片墙) ================= -->
     <section class="px-8 py-16">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-bold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-emerald-400">带你“稳稳”上岸的实力派天团</h2>
-        <p class="text-sm text-gray-300">点击卡片，解锁名师反差萌隐藏语录 👇</p>
-      </div>
-
-      <!-- 3.1 名师天团 (PC端改为4列布局) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-        <!-- 老师卡片 1 -->
-        <div class="perspective-1000 h-[320px] w-full cursor-pointer group" onclick="this.querySelector('.transform-style-3d').classList.toggle('rotate-y-180')">
-          <div class="relative w-full h-full transform-style-3d">
-            <!-- 正面 -->
-            <div class="absolute inset-0 backface-hidden rounded-2xl p-6 flex flex-col justify-end bg-gradient-to-b from-blue-500 to-cyan-400 border border-white/20 shadow-lg">
-              <div class="absolute top-4 left-4 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 text-xs font-bold">考研英语</div>
-              <div class="absolute bottom-0 right-0 w-2/3 h-2/3 bg-white/10 rounded-tl-full opacity-50 pointer-events-none"></div>
-              <div class="relative z-10 pointer-events-none">
-                <h3 class="text-2xl font-bold">王牌阅读</h3>
-                <p class="text-sm text-white/90">严谨词汇专家</p>
-              </div>
-            </div>
-            <!-- 背面 -->
-            <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-6 flex flex-col items-center justify-center bg-[#1e293b] border border-gray-600 shadow-lg text-center gap-4">
-              <span class="text-6xl">🤯</span>
-              <p class="text-base font-medium text-orange-300 leading-snug">"别背abandon了！跟我学，阅读理解直接起飞！"</p>
-            </div>
-          </div>
-        </div>
-        <!-- 老师卡片 2 -->
-        <div class="perspective-1000 h-[320px] w-full cursor-pointer group" onclick="this.querySelector('.transform-style-3d').classList.toggle('rotate-y-180')">
-          <div class="relative w-full h-full transform-style-3d">
-            <!-- 正面 -->
-            <div class="absolute inset-0 backface-hidden rounded-2xl p-6 flex flex-col justify-end bg-gradient-to-b from-red-500 to-orange-400 border border-white/20 shadow-lg">
-              <div class="absolute top-4 left-4 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 text-xs font-bold">考研政治</div>
-              <div class="absolute bottom-0 right-0 w-2/3 h-2/3 bg-white/10 rounded-tl-full opacity-50 pointer-events-none"></div>
-              <div class="relative z-10 pointer-events-none">
-                <h3 class="text-2xl font-bold">押题王者</h3>
-                <p class="text-sm text-white/90">哲学引路人</p>
-              </div>
-            </div>
-            <!-- 背面 -->
-            <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-6 flex flex-col items-center justify-center bg-[#1e293b] border border-gray-600 shadow-lg text-center gap-4">
-              <span class="text-6xl">😎</span>
-              <p class="text-base font-medium text-orange-300 leading-snug">"选择题闭眼选？不存在的，押题我只玩真实的！"</p>
-            </div>
-          </div>
-        </div>
-        <!-- 老师卡片 3 -->
-        <div class="perspective-1000 h-[320px] w-full cursor-pointer group" onclick="this.querySelector('.transform-style-3d').classList.toggle('rotate-y-180')">
-          <div class="relative w-full h-full transform-style-3d">
-            <!-- 正面 -->
-            <div class="absolute inset-0 backface-hidden rounded-2xl p-6 flex flex-col justify-end bg-gradient-to-b from-emerald-500 to-teal-400 border border-white/20 shadow-lg">
-              <div class="absolute top-4 left-4 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 text-xs font-bold">考研数学</div>
-              <div class="absolute bottom-0 right-0 w-2/3 h-2/3 bg-white/10 rounded-tl-full opacity-50 pointer-events-none"></div>
-              <div class="relative z-10 pointer-events-none">
-                <h3 class="text-2xl font-bold">满分制造机</h3>
-                <p class="text-sm text-white/90">逻辑推演大师</p>
-              </div>
-            </div>
-            <!-- 背面 -->
-            <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-6 flex flex-col items-center justify-center bg-[#1e293b] border border-gray-600 shadow-lg text-center gap-4">
-              <span class="text-6xl">🤓</span>
-              <p class="text-base font-medium text-orange-300 leading-snug">"基础差？不慌，把这套公式盘包浆，135+稳了！"</p>
-            </div>
-          </div>
-        </div>
-        <!-- 老师卡片 4 -->
-        <div class="perspective-1000 h-[320px] w-full cursor-pointer group" onclick="this.querySelector('.transform-style-3d').classList.toggle('rotate-y-180')">
-          <div class="relative w-full h-full transform-style-3d">
-            <!-- 正面 -->
-            <div class="absolute inset-0 backface-hidden rounded-2xl p-6 flex flex-col justify-end bg-gradient-to-b from-purple-500 to-pink-400 border border-white/20 shadow-lg">
-              <div class="absolute top-4 left-4 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 text-xs font-bold">专业课</div>
-              <div class="absolute bottom-0 right-0 w-2/3 h-2/3 bg-white/10 rounded-tl-full opacity-50 pointer-events-none"></div>
-              <div class="relative z-10 pointer-events-none">
-                <h3 class="text-2xl font-bold">名校领航员</h3>
-                <p class="text-sm text-white/90">院校解密猎手</p>
-              </div>
-            </div>
-            <!-- 背面 -->
-            <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-6 flex flex-col items-center justify-center bg-[#1e293b] border border-gray-600 shadow-lg text-center gap-4">
-              <span class="text-6xl">🕵️‍♂️</span>
-              <p class="text-base font-medium text-orange-300 leading-snug">"自命题有多难？掌握核心逻辑，导师的心思全拿捏！"</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3.2 2025届高分捷报 (瀑布流滚动 - 居中较宽) -->
-      <div class="max-w-4xl mx-auto bg-white/5 rounded-2xl p-8 border border-white/10 overflow-hidden relative">
-        <h3 class="text-lg font-bold text-center mb-6 text-orange-300 flex items-center justify-center gap-2">
-          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-          2025届学长学姐疯狂刷屏
+      <!-- 照片墙核心容器 -->
+      <div class="max-w-5xl mx-auto bg-white/5 rounded-2xl border border-white/10 overflow-hidden relative pb-10 mt-6">
+        <h3 class="text-xl font-bold text-center mt-10 mb-8 text-orange-300 flex items-center justify-center gap-2">
+          <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+          <span id="txt-review-title"></span>
         </h3>
-        <!-- 上下遮罩使其融合 -->
-        <div class="absolute top-16 left-0 w-full h-12 bg-gradient-to-b from-[#181a33] to-transparent z-10"></div>
-        <div class="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-[#181a33] to-transparent z-10"></div>
         
-        <div class="h-[200px] overflow-hidden relative">
-          <div class="flex flex-col gap-4 animate-float-up absolute w-full px-4">
-            <div class="bg-black/40 backdrop-blur-sm rounded-lg p-4 text-sm text-gray-200 border border-white/5 flex items-start gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex-shrink-0 mt-0.5"></div><p class="mt-1">🎓 某双非逆袭985，总分412，多亏了有道的专业课指导！</p></div>
-            <div class="bg-black/40 backdrop-blur-sm rounded-lg p-4 text-sm text-gray-200 border border-white/5 flex items-start gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex-shrink-0 mt-0.5"></div><p class="mt-1">📈 数学135+！基础极差星人的救星啊啊啊！</p></div>
-            <div class="bg-black/40 backdrop-blur-sm rounded-lg p-4 text-sm text-gray-200 border border-white/5 flex items-start gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex-shrink-0 mt-0.5"></div><p class="mt-1">🔥 政治选择题几乎全中，跟着老师走绝对稳！</p></div>
-            <div class="bg-black/40 backdrop-blur-sm rounded-lg p-4 text-sm text-gray-200 border border-white/5 flex items-start gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex-shrink-0 mt-0.5"></div><p class="mt-1">✨ 英语阅读满分跨考上岸，感谢老师的逻辑拆解法！</p></div>
-            <div class="bg-black/40 backdrop-blur-sm rounded-lg p-4 text-sm text-gray-200 border border-white/5 flex items-start gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex-shrink-0 mt-0.5"></div><p class="mt-1">🌟 考研期间心态崩溃好几次，助教姐姐真的很贴心陪伴！</p></div>
-            <!-- 重复内容以实现无缝 -->
-            <div class="bg-black/40 backdrop-blur-sm rounded-lg p-4 text-sm text-gray-200 border border-white/5 flex items-start gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex-shrink-0 mt-0.5"></div><p class="mt-1">🎓 某双非逆袭985，总分412，多亏了有道的专业课指导！</p></div>
-            <div class="bg-black/40 backdrop-blur-sm rounded-lg p-4 text-sm text-gray-200 border border-white/5 flex items-start gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex-shrink-0 mt-0.5"></div><p class="mt-1">📈 数学135+！基础极差星人的救星啊啊啊！</p></div>
-          </div>
+        <!-- 3列(排)照片墙横向滚动区 (大尺寸图片) -->
+        <div class="relative w-full overflow-hidden flex flex-col gap-4">
+          <!-- 左右渐变遮罩 -->
+          <div class="absolute top-0 left-0 w-24 h-full bg-gradient-to-r from-[#181a33] to-transparent z-10 pointer-events-none"></div>
+          <div class="absolute top-0 right-0 w-24 h-full bg-gradient-to-l from-[#181a33] to-transparent z-10 pointer-events-none"></div>
+          
+          <div id="photo-wall-row-1" class="animate-scroll-x gap-4 px-4 flex items-center"></div>
+          <div id="photo-wall-row-2" class="animate-scroll-x-reverse gap-4 px-4 flex items-center"></div>
+          <div id="photo-wall-row-3" class="animate-scroll-x gap-4 px-4 flex items-center" style="animation-duration: 35s;"></div>
         </div>
       </div>
     </section>
 
-    <!-- ================= 模块四：转化截杀 (PC端采用左右/网格布局) ================= -->
-    <section class="px-8 py-16 bg-gradient-to-b from-transparent via-[#4a2311]/80 to-[#1c0f08] relative">
+    <!-- ================= 模块四：转化截杀 ================= -->
+    <section class="px-8 pt-8 pb-6 bg-gradient-to-b from-transparent via-[#4a2311]/80 to-transparent relative">
       <div class="text-center mb-12">
-        <h2 class="text-4xl md:text-5xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-500 tracking-wider">
-          开学季抢跑计划<br/>限定福利大放送
-        </h2>
+        <h2 id="txt-benefit-title" class="text-4xl md:text-5xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-500 tracking-wider"></h2>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
         <!-- 左侧：价格与福利卡片 -->
-        <div class="bg-gradient-to-b from-orange-500 to-red-600 p-1.5 rounded-3xl shadow-[0_0_40px_rgba(239,68,68,0.4)] transform hover:scale-[1.02] transition-transform">
+        <div class="bg-gradient-to-b from-orange-500 to-red-600 p-1.5 rounded-3xl shadow-[0_0_40px_rgba(239,68,68,0.4)] transform hover:scale-[1.02] transition-transform h-full">
           <div class="bg-[#111] rounded-[20px] p-8 text-center h-full relative overflow-hidden flex flex-col justify-center">
-            <div class="absolute top-0 right-0 bg-red-500 text-white text-sm font-bold px-4 py-1.5 rounded-bl-xl">限时特惠</div>
+            <div id="txt-coupon-tag" class="absolute top-0 right-0 bg-red-500 text-white text-sm font-bold px-4 py-1.5 rounded-bl-xl"></div>
             
             <div class="mb-6 mt-4">
-              <span class="text-gray-400 text-base">开学季专属神券</span>
+              <span id="txt-coupon-label" class="text-gray-400 text-base"></span>
               <div class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mt-2">
-                💰1000<span class="text-2xl">元</span>
+                💰<span id="txt-coupon-value"></span><span class="text-2xl">元</span>
               </div>
             </div>
 
             <div class="bg-white/10 rounded-xl p-5 mb-6 border border-white/5">
               <div class="flex items-center justify-center gap-2 text-orange-400 font-bold text-xl mb-2">
                 <i data-lucide="zap" class="fill-current w-6 h-6"></i>
-                进阶福利：19.9元 抵 300元 膨胀金！
+                <span id="txt-deposit-title"></span>
               </div>
-              <p class="text-sm text-gray-300">花小钱，省大钱！添加专属助教微信即可激活</p>
+              <p id="txt-deposit-desc" class="text-sm text-gray-300"></p>
             </div>
 
             <button 
               onclick="openWechatModal()"
               class="w-full py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-xl rounded-xl shadow-[0_6px_0_#b45309] active:shadow-none active:translate-y-1 transition-all"
             >
-              一键领取全部福利
+              <span id="txt-benefit-btn"></span>
             </button>
           </div>
         </div>
 
-        <!-- 右侧：赠礼 & 班级亮点 -->
-        <div class="flex flex-col gap-6">
-          <!-- 赠礼卡片 -->
-          <div class="bg-[#1e1b38] border border-indigo-500/30 rounded-2xl p-6 flex items-center gap-6 h-1/3">
-            <div class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 animate-bounce">
-              <i data-lucide="gift" class="text-white w-10 h-10"></i>
-            </div>
-            <div>
-              <h4 class="font-bold text-xl mb-2 text-indigo-300">报名即赠【上岸大礼包】</h4>
-              <p class="text-sm text-gray-400 leading-relaxed">含独家内部纸质讲义、长线规划日历、学霸同款开学盲盒等实物周边免费邮寄。</p>
-            </div>
+        <!-- 右侧：整合后的免费公开课卡片 -->
+        <div class="bg-[#1e1b38] border border-indigo-500/30 rounded-3xl p-8 flex flex-col justify-center relative overflow-hidden group hover:border-indigo-400 transition-colors h-full">
+          <div class="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-colors pointer-events-none"></div>
+          
+          <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 mb-6 shadow-lg shadow-indigo-500/30">
+            <i data-lucide="play-circle" class="text-white w-8 h-8"></i>
+          </div>
+          
+          <h3 id="txt-course-title" class="font-bold text-3xl mb-4 text-indigo-100 leading-tight"></h3>
+          <p id="txt-course-desc" class="text-base text-gray-400 leading-relaxed mb-8"></p>
+          
+          <!-- 动态标签 -->
+          <div id="course-tags-container" class="flex flex-wrap gap-2 mb-8">
+             <!-- JS 动态注入 -->
           </div>
 
-          <!-- 班级亮点展示 -->
-          <div class="bg-white/5 rounded-2xl p-6 border border-white/10 h-2/3 flex flex-col justify-center">
-            <h3 class="font-bold text-gray-300 mb-4 flex items-center gap-2 text-lg">
-              <i data-lucide="book-open" class="text-orange-400 w-5 h-5"></i>
-              硬核课程，全面覆盖提分死角
-            </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="bg-white/5 p-4 rounded-lg border border-white/5 text-sm text-gray-200 shadow-sm flex items-center">📘 英语：长难句秒懂，词汇暴涨</div>
-              <div class="bg-white/5 p-4 rounded-lg border border-white/5 text-sm text-gray-200 shadow-sm flex items-center">📕 政治：拒绝死背，精准踩分速成</div>
-              <div class="bg-white/5 p-4 rounded-lg border border-white/5 text-sm text-gray-200 shadow-sm flex items-center">📗 数学：构建思维，告别题海战术</div>
-              <div class="bg-white/5 p-4 rounded-lg border border-white/5 text-sm text-gray-200 shadow-sm flex items-center">📙 专业课：1对1定向，直击自命题</div>
-            </div>
+          <div class="mt-auto relative z-10">
+            <!-- 升级高亮版的公开课领取按钮 (添加了气泡图标、渐变、强发光和连续扫光动画) -->
+            <button onclick="window.open('https://ke.study.163.com/course/detail/100162652?kyFrom=c2hpbW8ueW91ZGFvLmNvbQ==&tid=1475361492&courseId=1473682173?outVendor=kaoyan', '_blank')" class="btn-breathe relative overflow-hidden w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold text-lg rounded-xl shadow-[0_0_25px_rgba(99,102,241,0.6)] border border-indigo-300/60 transition-all flex items-center justify-center gap-2 cursor-pointer group">
+              <!-- 扫光元素 -->
+              <div class="absolute inset-0 w-1/4 h-full bg-white/30 skew-x-[-15deg] animate-sweep pointer-events-none"></div>
+              <i data-lucide="gift" class="w-5 h-5 text-yellow-300 animate-pulse"></i>
+              立即领取公开课 
+              <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+            </button>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- 底部引导占位 -->
-      <div class="text-center pb-12 pt-10">
-        <p class="text-gray-400 text-base mb-6">机会不等人，扫码开启你的研究生生涯 👇</p>
-        <div class="w-64 h-64 bg-white p-3 rounded-2xl mx-auto flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" onclick="openWechatModal()">
-            <div class="w-full h-full border-4 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-500 gap-3">
-              <span class="text-5xl">📱</span>
-              <span class="text-sm font-bold">点击添加企微</span>
-            </div>
+    <!-- ================= 模块五：名师天团 ================= -->
+    <section class="px-8 pt-20 pb-12">
+      <div class="text-center mb-12">
+        <h2 id="txt-team-title" class="text-3xl md:text-4xl font-bold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-emerald-400"></h2>
+        <p id="txt-team-subtitle" class="text-sm text-gray-300"></p>
+      </div>
+
+      <!-- 名师天团 (PC端 3列 并排布局) -->
+      <div id="teachers-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <!-- JS 动态注入老师卡片 -->
+      </div>
+    </section>
+
+    <!-- ================= 模块六：课程介绍与核心亮点 ================= -->
+    <section class="px-8 pb-10 pt-4">
+      <div class="max-w-5xl mx-auto bg-gradient-to-b from-[#181124] to-[#120a1c] border border-purple-500/30 rounded-3xl p-10 relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        <!-- 装饰背景 -->
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-orange-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        
+        <div class="text-center mb-10 relative z-10">
+          <h2 id="txt-intro-title" class="text-3xl font-bold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-400 tracking-wide"></h2>
+          <p id="txt-intro-desc" class="text-gray-400 text-sm"></p>
+        </div>
+
+        <!-- 4大核心亮点 (JS动态注入，已升级图标设计) -->
+        <div id="course-features-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 relative z-10">
+           <!-- Grid Items -->
+        </div>
+
+        <!-- 负责人语录与结语 -->
+        <div class="bg-white/5 rounded-2xl p-8 border border-white/10 relative z-10">
+           <i data-lucide="quote" class="absolute top-6 left-6 text-purple-500/20 w-16 h-16"></i>
+           <div class="relative z-10">
+             <!-- 添加了 indent-[2em] 实现首行缩进 -->
+             <p id="txt-intro-quote" class="text-gray-300 italic leading-relaxed text-sm md:text-base mb-6 text-left indent-[2em] text-justify"></p>
+             <div class="w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent mb-6"></div>
+             <!-- 左对齐，首行缩进 -->
+             <p id="txt-intro-conclusion" class="text-orange-200 font-medium text-left indent-[2em] tracking-wide leading-relaxed text-sm md:text-base text-justify"></p>
+           </div>
         </div>
       </div>
     </section>
@@ -313,15 +288,15 @@
           <div class="bg-green-500 p-2.5 rounded-full">
             <i data-lucide="message-circle" class="text-white fill-current w-6 h-6"></i>
           </div>
-          <span class="text-sm md:text-base text-gray-300 font-medium hidden sm:inline-block">专属助教在线，随时答疑解惑</span>
-          <span class="text-sm md:text-base text-gray-300 font-medium sm:hidden">专属助教在线</span>
+          <span id="txt-cta-chat-pc" class="text-sm md:text-base text-gray-300 font-medium hidden sm:inline-block"></span>
+          <span id="txt-cta-chat-mb" class="text-sm md:text-base text-gray-300 font-medium sm:hidden"></span>
         </div>
         
         <button 
           onclick="openWechatModal()"
           class="btn-breathe bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-3 md:py-4 px-8 md:px-12 rounded-full shadow-lg flex items-center gap-2 text-base md:text-lg"
         >
-          抢 19.9 膨胀金 <i data-lucide="arrow-up-right" class="w-5 h-5"></i>
+          <span id="txt-cta-btn"></span> <i data-lucide="arrow-up-right" class="w-5 h-5"></i>
         </button>
       </div>
     </div>
@@ -347,126 +322,589 @@
           <i data-lucide="x" class="w-6 h-6"></i>
         </button>
         
-        <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-5 -mt-12 border-4 border-white shadow-lg">
+        <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-5 -mt-12 border-[3px] border-white shadow-lg">
           <i data-lucide="message-circle" class="fill-current w-10 h-10"></i>
         </div>
         
-        <h3 class="text-2xl font-bold text-gray-900 mb-2">长按扫码添加专属助教</h3>
-        <p class="text-sm text-gray-500 mb-8">获取规划 / 激活19.9膨胀金 / 领报名神券</p>
+        <h3 id="txt-modal-title" class="text-2xl font-bold text-gray-900 mb-2"></h3>
+        <p id="txt-modal-desc" class="text-sm text-gray-500 mb-8"></p>
         
-        <div class="w-64 h-64 bg-gray-100 rounded-xl mx-auto mb-8 p-3">
-          <!-- 微信二维码占位 -->
-          <div class="w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400">
-            <span class="text-sm font-medium">企业微信二维码区域</span>
-          </div>
+        <div class="w-64 h-64 bg-gray-100 rounded-xl mx-auto mb-8 p-3 overflow-hidden flex items-center justify-center">
+           <div id="modal-qr-area" class="w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400">
+             <!-- JS 动态注入二维码图片或占位符 -->
+           </div>
         </div>
 
         <div class="bg-orange-50 text-orange-600 text-sm py-3 px-6 rounded-full font-medium inline-block animate-pulse">
-          今日还剩 8 个膨胀金名额
+          <span id="txt-modal-quota"></span>
         </div>
       </div>
     </div>
 
+    <!-- 图片放大预览弹窗 -->
+    <div id="image-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 md:p-10 cursor-zoom-out" onclick="closeImageModal()">
+      <button onclick="closeImageModal()" class="absolute top-6 right-6 text-gray-400 hover:text-white cursor-pointer z-10">
+        <i data-lucide="x" class="w-8 h-8"></i>
+      </button>
+      <img id="image-modal-img" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-transform duration-300 scale-95" alt="预览大图">
+    </div>
+
   </div> <!-- /End max-w-6xl -->
 
-  <!-- JavaScript 逻辑交互 -->
+  <!-- ========================================== -->
+  <!-- ⚙️ 核心数据配置文件：后续修改文字、图片全都在这里 -->
+  <!-- ========================================== -->
   <script>
-    // 1. 初始化 Lucide Icons
-    lucide.createIcons();
+    const PAGE_CONFIG = {
+      // 1. 基础设置与头屏内容
+      base: {
+        logoText: "网易有道考研",
+        pageBgImage: "", 
+        heroTagline: "2026考研首发季",
+        heroMainTitle: "只争朝夕",
+        heroSubTitle: "网易有道考研开学季",
+        heroDesc: "此站上岸｜开学考研蓄力计划已开启",
+        targetDate: "2026-03-31T23:59:59", 
+        timerLabel: "距开学季超值福利下线仅剩",
+      },
 
-    // 2. 倒计时逻辑
-    const targetDate = new Date('2026-03-31T23:59:59').getTime();
-    
-    function updateTimer() {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
+      // 2. MBTI 测试模块配置
+      mbti: {
+        title: "考研开学季·隐藏人格测试",
+        desc: "考研，是一场在黑暗中重塑自我的漫长进化。<br/>测测你的【隐藏备考人格】是哪种动物？",
+        buttonText: "直接唤醒",
+        participantCount: "100", // <-- 修改了初始唤醒人数基数为 100
+        questions: [
+          { 
+            q: "【动机】决定考研的那一刻，你的核心驱动力是？", 
+            options: [
+              {text: "A. 拿回主动权，向所有人证明我的实力", score: 1}, 
+              {text: "B. 打破认知天花板，去更深的世界看看", score: 2},
+              {text: "C. 追求稳妥，要一张能握在手里的底牌", score: 3},
+              {text: "D. 不留遗憾，去追逐曾经发光的理想", score: 4}
+            ] 
+          },
+          { 
+            q: "【破局】遇到啃不动的硬核专业课，你的第一反应？", 
+            options: [
+              {text: "A. 激起胜负欲，今天不睡觉也要干掉它", score: 1}, 
+              {text: "B. 停止无效努力，先去拆解底层逻辑和框架", score: 2},
+              {text: "C. 挫败感袭来，先放空一下安抚焦躁的情绪", score: 3},
+              {text: "D. 换个脑子，找找有没有更有趣的平替理解法", score: 4}
+            ] 
+          },
+          { 
+            q: "【逆境】模拟考崩了，一个人吹冷风时你心底的OS？", 
+            options: [
+              {text: "A. “这点痛算什么，下次我必定把分数抢回来！”", score: 1}, 
+              {text: "B. “哭没用，赶紧回去复盘错题漏在哪了。”", score: 2},
+              {text: "C. “好累啊…但大家都一样难，抱抱自己继续熬。”", score: 3},
+              {text: "D. “早点暴露问题也是好事，考场上就不会摔了。”", score: 4}
+            ] 
+          },
+          { 
+            q: "【心流】连续高强度学习12小时，合上书那一刻的感觉是？", 
+            options: [
+              {text: "A. 征服的爽感：又拿下了一座山头！", score: 1}, 
+              {text: "B. 掌控的踏实感：知识网又织密了一层。", score: 2},
+              {text: "C. 治愈的感动：原来我真的能坚持做一件这么苦的事。", score: 3},
+              {text: "D. 蜕变的失重感：感觉自己正在加速飞向新天地。", score: 4}
+            ] 
+          },
+          { 
+            q: "【决战】踏入初试考场前最后一秒，你会对自己说？", 
+            options: [
+              {text: "A. “去吧，去赢下这场战争。”", score: 1}, 
+              {text: "B. “相信肌肉记忆，稳住正常发挥。”", score: 2},
+              {text: "C. “对得起自己的付出就好，接纳一切结果。”", score: 3},
+              {text: "D. “不管了，准备起飞！”", score: 4}
+            ] 
+          }
+        ],
+        results: [
+          { min: 5, max: 7, icon: "🐺", name: "狼 · 绝地的掠食者", sketch: "你是为赢而生的战士。考研不是考试，是收复失地的战争。你不需要自我感动，你的世界里只有“摧毁障碍”的极致浪漫。", blindSpot: "极易陷入“进度焦虑”，用战术上的死磕掩盖战略上的偏差。方向错了，越拼命越危险。", actionText: "点击预约【狼系专供·1V1破局规划】（助教老师帮你校准靶心，不做无用功，全速超车）" },
+          { min: 8, max: 10, icon: "🐐", name: "岩羊 · 巅峰的攀登者", sketch: "你视痛苦为进阶的踏板。越是地狱难度的试卷，越能激起你死磕到底的狠劲。你不看深渊，只看巅峰。", blindSpot: "容易在单点难题上“钻牛角尖”，缺乏对试卷全局得分率的宏观把控，抓小失大。", actionText: "点击预约【岩羊专属·1V1得分推演】（定制“舍小抓大”的应试拿分策略）" },
+          { min: 11, max: 13, icon: "🐋", name: "鲸鱼 · 孤高的破冰船", sketch: "你清醒而孤傲地航行在学术深海。你是天生的规划大师，在孤独中积蓄力量，只为重塑认知，撞碎平庸的冰层。", blindSpot: "陷入“完美主义陷阱”。一旦计划被打乱，隐性焦虑就会爆发，极度依赖科学、严谨的备考时间轴。", actionText: "点击预约【鲸系专供·1V1定制复习SOP】（量身定制抗干扰的高容错复习路径）" },
+          { min: 14, max: 15, icon: "🪲", name: "蝉 · 惊雷的守望者", sketch: "你在沉默中蛰伏，切断退路。你或许起步不是最早，但拥有常人难及的耐力。所有的寂寞，都是你一鸣惊人的修行。", blindSpot: "漫长的平台期容易让你看不见希望，容易死记硬背。你需要的是能立刻打破瓶颈、验证成果的外部指引。", actionText: "点击预约【蝉系专供·1V1提分诊断】（助教老师帮你做弱势学科诊断，找准发力点）" },
+          { min: 16, max: 18, icon: "🪼", name: "水母 · 荧光的疗愈者", sketch: "你拥有透明却极具韧性的灵魂。在深海的重压下，你依然能接纳自己的脆弱，并将其炼成前行路上温柔的微光。", blindSpot: "极易精神内耗，受情绪波动影响大。信息差和孤军奋战会让你感到窒息，你迫切需要安全感和陪伴。", actionText: "点击预约【水母专属·1V1陪伴式督学规划】（定制最适合的备考节奏，找回掌控感）" },
+          { min: 19, max: 20, icon: "🕊️", name: "飞鸟 · 浪漫的飞行家", sketch: "你困于书桌，灵魂却在云端起舞。你用诗意消解枯燥，拥有极强的发散思维，是看透现实依然选择热爱的自由灵魂。", blindSpot: "容易三分钟热度，“想得多、做得少”，复习时思维跳跃，容易抓不住应试的死板重点。", actionText: "点击预约【飞鸟专属·1V1定向领航】（帮你把发散的思维收拢为切实可行的抢分步骤，锁死分数）" }
+        ]
+      },
 
-      if (distance < 0) return;
+      // 3. 名师天团模块配置
+      teachers: {
+        title: "带你“稳稳”上岸的实力派天团",
+        subtitle: "点击卡片，解锁名师反差萌隐藏语录 👇",
+        list: [
+          { subject: "考研英语", name: "唐迟老师", desc: "王牌阅读 · 严谨词汇专家", frontBgColor: "from-blue-500 to-cyan-400", frontImage: "https://i.ibb.co/4RNvjMrs/1.png", backEmoji: "🤯", backImage: "", quote: "别背abandon了！跟我学，阅读理解直接起飞！" },
+          { subject: "考研政治", name: "米鹏老师", desc: "押题王者 · 哲学引路人", frontBgColor: "from-red-500 to-orange-400", frontImage: "https://i.ibb.co/spcpQF7k/image.png", backEmoji: "😎", backImage: "", quote: "选择题闭眼选？不存在的，押题我只玩真实的！" },
+          { subject: "考研数学", name: "武忠祥老师", desc: "满分制造机 · 逻辑推演大师", frontBgColor: "from-emerald-500 to-teal-400", frontImage: "https://i.ibb.co/yBdvQQ2t/1.png", backEmoji: "🤓", backImage: "", quote: "基础差？不慌，把这套公式盘包浆，135+稳了！" }
+        ]
+      },
 
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      // 4. 高分捷报 & 成绩单照片墙
+      reviews: {
+        title: "26考研学长学姐疯狂刷屏",
+        list: [],
+        scoreImages: [
+          "https://i.ibb.co/n8D6nRFP/1.jpg",
+          "https://i.ibb.co/Q4qnLGW/2.jpg",
+          "https://i.ibb.co/SDnXJ287/3.png",
+          "https://i.ibb.co/gZ0tsn2m/4.png",
+          "https://i.ibb.co/mCsGmfp0/5.jpg",
+          "https://i.ibb.co/gpZ0fGN/6.jpg",
+          "https://i.ibb.co/RkQ8KSB3/7.jpg",
+          "https://i.ibb.co/gLGCGy5S/8.png",
+          "https://i.ibb.co/mwBkwzV/1.jpg",
+          "https://i.ibb.co/3Jw6BwR/2.png",
+          "https://i.ibb.co/jPRBBfMm/3.jpg",
+          "https://i.ibb.co/QjDbbnBv/4.jpg",
+          "https://i.ibb.co/JWyvc34p/5.jpg",
+          "https://i.ibb.co/m5PzwPYV/6.jpg",
+          "https://i.ibb.co/YFkhkYk0/7.jpg",
+          "https://i.ibb.co/DHPBWGRb/8.jpg",
+          "https://i.ibb.co/5g3m4mVV/1.jpg",
+          "https://i.ibb.co/v6c1kXGm/2.jpg",
+          "https://i.ibb.co/4wz3zCCy/3.jpg",
+          "https://i.ibb.co/VYrQgwX6/4.jpg",
+          "https://i.ibb.co/gbGGRF0V/5.jpg",
+          "https://i.ibb.co/cSBpQRfJ/6.jpg",
+          "https://i.ibb.co/G44xdtC6/1.jpg",
+          "https://i.ibb.co/BKzQrKwZ/2.jpg",
+          "https://i.ibb.co/SD1HgV9w/3.jpg",
+          "https://i.ibb.co/B27ryScn/4.jpg",
+          "https://i.ibb.co/39zYQfQd/5.jpg",
+          "https://i.ibb.co/SDnXJ287/3.png"
+        ] 
+      },
 
-      document.getElementById('t-days').innerText = days;
-      document.getElementById('t-hours').innerText = hours.toString().padStart(2, '0');
-      document.getElementById('t-minutes').innerText = minutes.toString().padStart(2, '0');
-      document.getElementById('t-seconds').innerText = seconds.toString().padStart(2, '0');
+      // 5. 销售转化福利配置
+      benefits: {
+        title: "开学季抢跑计划<br/>限定福利大放送",
+        couponTag: "限时特惠",
+        couponLabel: "开学季专属神券",
+        couponValue: "1000",
+        depositTitle: "进阶福利：19.9元 抵 300元 膨胀金！",
+        depositDesc: "花小钱，省大钱！添加专属助教微信即可激活",
+        btnText: "一键领取全部福利",
+        
+        courseTitle: "免费领取开学季主题公开课",
+        courseDesc: "名师领航不迷路，深度剖析考研趋势，为你定制专属备考方案。免费报名即领。",
+        courseTags: ["核心考点串讲", "全年备考规划", "历年真题解析", "学霸高分秘籍"]
+      },
+
+      // 6. 课程优势介绍配置
+      courseIntro: {
+        title: "网易有道考研3.0 · 核心优势",
+        desc: "考研是一场长期而复杂的系统工程，我们通过四大维度全面升级，真正助力你提升学习效率。",
+        features: [
+          {
+            icon: "users",
+            title: "强大的师资是基石",
+            desc: "网易有道考研与各位名师不仅是合作，更是长期并肩的伙伴，平均合作年限已近8年。线上直播即时互动，确保内容常讲常新，零距离交流。",
+            tags: ["数学: 武忠祥/刘金峰/姜晓千", "英语: 唐迟/孙祥喆/陈曲/曲根", "政治: 米鹏/刘亚男"]
+          },
+          {
+            icon: "bot",
+            title: "AI智慧课堂：专注理解思考",
+            desc: "AI的价值不是替代学习，而是让学习更高效。重构学习体验，把你从繁琐工作中解放出来，有更多精力攻克难点。",
+            tags: ["AI实时字幕", "AI智能讲义生成", "AI拍题答疑"]
+          },
+          {
+            icon: "flame",
+            title: "寒暑双集训：锁定70%卷面分",
+            desc: "全网首家将高强度的“高三式”集训模式搬至线上，让学生足不出户，在决定胜负的关键冲刺期实现“弯道超车”。",
+            tags: ["寒假: 夯实基础/培养习惯", "暑假: 高三作息/任务管理"]
+          },
+          {
+            icon: "heart-handshake",
+            title: "1对1专属服务：人情陪伴",
+            desc: "在技术飞速发展的今天，AI无法替代真人老师带来的情感连接与深度共情。为你提供个性化指导与漫长备考路上的温暖陪伴。",
+            tags: ["知识导航", "情感支撑与鼓励", "专属加油站"]
+          }
+        ],
+        quote: "“从报考人数的‘降温’到备考心态的‘理性’，考研市场正在经历一场深刻的价值回归。我们围绕课程师资、AI工具、关键备考节点及1对1服务四大维度进行全面升级，希望真正助力学子提升学习效率。”<br/><span class='text-purple-300 mt-2 block'>—— 网易有道大学生业务负责人 郑丽勤</span>",
+        conclusion: "考研，是人生向前一步的主动选择。在任何竞争环境下，这份坚定向上的信念都弥足珍贵。愿每一位追逐梦想的学子都能得偿所愿，也期待网易有道考研3.0，能成为更多学子奋斗路上最值得信赖的同行伙伴！"
+      },
+
+      // 7. 企微二维码及弹窗配置
+      wechat: {
+        ctaChatPc: "专属助教在线，随时答疑解惑",
+        ctaChatMobile: "专属助教在线",
+        ctaBtn: "抢 19.9 膨胀金",
+        qrCodeImage: "https://i.ibb.co/hJJpRGnj/image.png", 
+        modalTitle: "长按扫码添加专属助教",
+        modalDesc: "获取规划 / 激活19.9膨胀金 / 领报名神券",
+        modalQuota: "今日还剩 8 个膨胀金名额"
+      }
+    };
+  </script>
+
+  <!-- ========================================== -->
+  <!-- 💻 渲染引擎 -->
+  <!-- ========================================== -->
+  <script>
+    let mbtiCountNum = parseInt(PAGE_CONFIG.mbti.participantCount.replace(/,/g, ''), 10);
+
+    function initPage() {
+      // 1. 文本映射
+      const map = {
+        'txt-logo': PAGE_CONFIG.base.logoText,
+        'txt-hero-tagline': PAGE_CONFIG.base.heroTagline,
+        'txt-hero-mainTitle': PAGE_CONFIG.base.heroMainTitle,
+        'txt-hero-subTitle': PAGE_CONFIG.base.heroSubTitle,
+        'txt-hero-desc': PAGE_CONFIG.base.heroDesc,
+        'txt-timer-label': PAGE_CONFIG.base.timerLabel,
+        
+        'txt-mbti-title': PAGE_CONFIG.mbti.title,
+        'txt-mbti-desc': PAGE_CONFIG.mbti.desc,
+        'txt-mbti-btn': PAGE_CONFIG.mbti.buttonText,
+        'txt-mbti-count': mbtiCountNum.toLocaleString(), // 初始渲染数字
+
+        'txt-team-title': PAGE_CONFIG.teachers.title,
+        'txt-team-subtitle': PAGE_CONFIG.teachers.subtitle,
+        'txt-review-title': PAGE_CONFIG.reviews.title,
+        
+        'txt-benefit-title': PAGE_CONFIG.benefits.title,
+        'txt-coupon-tag': PAGE_CONFIG.benefits.couponTag,
+        'txt-coupon-label': PAGE_CONFIG.benefits.couponLabel,
+        'txt-coupon-value': PAGE_CONFIG.benefits.couponValue,
+        'txt-deposit-title': PAGE_CONFIG.benefits.depositTitle,
+        'txt-deposit-desc': PAGE_CONFIG.benefits.depositDesc,
+        'txt-benefit-btn': PAGE_CONFIG.benefits.btnText,
+
+        'txt-course-title': PAGE_CONFIG.benefits.courseTitle,
+        'txt-course-desc': PAGE_CONFIG.benefits.courseDesc,
+
+        'txt-intro-title': PAGE_CONFIG.courseIntro.title,
+        'txt-intro-desc': PAGE_CONFIG.courseIntro.desc,
+        'txt-intro-quote': PAGE_CONFIG.courseIntro.quote,
+        'txt-intro-conclusion': PAGE_CONFIG.courseIntro.conclusion,
+
+        'txt-cta-chat-pc': PAGE_CONFIG.wechat.ctaChatPc,
+        'txt-cta-chat-mb': PAGE_CONFIG.wechat.ctaChatMobile,
+        'txt-cta-btn': PAGE_CONFIG.wechat.ctaBtn,
+        'txt-modal-title': PAGE_CONFIG.wechat.modalTitle,
+        'txt-modal-desc': PAGE_CONFIG.wechat.modalDesc,
+        'txt-modal-quota': PAGE_CONFIG.wechat.modalQuota,
+      };
+
+      for (const [id, value] of Object.entries(map)) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = value;
+      }
+
+      // 2. 背景与二维码
+      if (PAGE_CONFIG.base.pageBgImage) {
+        document.getElementById('app-body').style.backgroundImage = `url(${PAGE_CONFIG.base.pageBgImage})`;
+      }
+      const qrHtml = PAGE_CONFIG.wechat.qrCodeImage 
+        ? `<img src="${PAGE_CONFIG.wechat.qrCodeImage}" alt="微信二维码" class="w-full h-full object-cover rounded-lg">`
+        : `<span class="text-5xl">📱</span><span class="text-sm font-bold text-center">待上传<br>企微二维码</span>`;
+      
+      const qrDisplayArea = document.getElementById('qr-display-area');
+      if (qrDisplayArea) qrDisplayArea.innerHTML = qrHtml;
+      document.getElementById('modal-qr-area').innerHTML = qrHtml;
+
+      // 3. 老师卡片 (使用 object-contain 和 drop-shadow 保留图片完美比例并增加立体感)
+      document.getElementById('teachers-container').innerHTML = PAGE_CONFIG.teachers.list.map((t) => {
+        const frontVisual = t.frontImage 
+          ? `<img src="${t.frontImage}" alt="${t.name}" class="absolute bottom-0 right-0 w-[90%] h-[85%] object-contain object-bottom z-0 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105 pointer-events-none">` 
+          : `<!-- 老师照片预留位设计 -->
+             <div class="absolute bottom-0 right-0 w-[70%] h-[85%] bg-white/10 rounded-tl-3xl border-t border-l border-white/20 flex items-center justify-center opacity-70 z-0 backdrop-blur-sm">
+               <div class="flex flex-col items-center text-white/40">
+                 <i data-lucide="user" class="w-14 h-14 mb-2"></i>
+                 <span class="text-xs font-bold tracking-widest">[老师半身照预留位]</span>
+               </div>
+             </div>`;
+        const backVisual = t.backImage 
+          ? `<img src="${t.backImage}" class="w-24 h-24 object-cover rounded-full border-[3px] border-gray-600 mb-2">`
+          : `<span class="text-6xl mb-2 block">${t.backEmoji}</span>`;
+        
+        return `
+          <div class="perspective-1000 h-[320px] w-full cursor-pointer group" onclick="this.querySelector('.transform-style-3d').classList.toggle('rotate-y-180')">
+            <div class="relative w-full h-full transform-style-3d">
+              <div class="absolute inset-0 backface-hidden rounded-2xl p-6 flex flex-col justify-end bg-gradient-to-b ${t.frontBgColor} border border-white/20 shadow-lg overflow-hidden">
+                <div class="absolute top-4 left-4 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 text-xs font-bold z-10">${t.subject}</div>
+                ${frontVisual}
+                <div class="relative z-10 pointer-events-none">
+                  <h3 class="text-2xl font-bold leading-tight mb-1">${t.name}</h3>
+                  <p class="text-sm text-white/90">${t.desc}</p>
+                </div>
+              </div>
+              <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-6 flex flex-col items-center justify-center bg-[#1e293b] border border-gray-600 shadow-lg text-center gap-2">
+                ${backVisual}
+                <p class="text-base font-medium text-orange-300 leading-snug">"${t.quote}"</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 4. 3列成绩单照片墙 
+      const customImages = PAGE_CONFIG.reviews.scoreImages || [];
+      const defaultPlaceholder = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='180' viewBox='0 0 140 180'%3E%3Crect width='140' height='180' fill='%232a233b'/%3E%3Ctext x='50%25' y='50%25' fill='%23a89f91' font-size='14' text-anchor='middle' alignment-baseline='middle' font-family='sans-serif'%3E高分成绩单%3C/text%3E%3C/svg%3E";
+      
+      let finalImages = [];
+      if (customImages.length > 0) {
+        for(let i=0; i<30; i++) {
+          finalImages.push(customImages[i % customImages.length]);
+        }
+      } else {
+        for(let i=0; i<30; i++) {
+          finalImages.push(defaultPlaceholder);
+        }
+      }
+      
+      const renderRow = (images) => {
+        const doubleImages = [...images, ...images];
+        return doubleImages.map((imgSrc) => `
+          <div class="h-[180px] md:h-[220px] w-auto flex-shrink-0 rounded-lg border border-white/10 overflow-hidden shadow-lg bg-black/40 flex items-center justify-center">
+            <img src="${imgSrc}" onclick="openImageModal('${imgSrc}')" class="h-full w-auto max-w-none object-contain opacity-90 hover:opacity-100 hover:scale-[1.02] transition-all duration-300 cursor-zoom-in">
+          </div>
+        `).join('');
+      };
+
+      document.getElementById('photo-wall-row-1').innerHTML = renderRow(finalImages.slice(0, 10));
+      document.getElementById('photo-wall-row-2').innerHTML = renderRow(finalImages.slice(10, 20));
+      document.getElementById('photo-wall-row-3').innerHTML = renderRow(finalImages.slice(20, 30));
+
+      // 5. 右侧公开课标签
+      document.getElementById('course-tags-container').innerHTML = PAGE_CONFIG.benefits.courseTags.map(tag => `
+        <span class="bg-indigo-500/20 text-indigo-300 text-xs px-3 py-1.5 rounded-full border border-indigo-500/30">${tag}</span>
+      `).join('');
+
+      // 6. 课程优势亮点网格渲染 (使用精美的定制化组合图标与升级的卡片样式)
+      const customIcons = [
+        // 1. 师资 (Teachers) - 蓝紫色系 + 闪星
+        `<div class="relative w-16 h-16 mb-6">
+           <div class="absolute inset-0 bg-blue-500/20 rounded-[20px] rotate-6 group-hover:rotate-12 transition-transform duration-500"></div>
+           <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-[20px] flex items-center justify-center shadow-[0_10px_20px_rgba(59,130,246,0.4)] transform group-hover:-translate-y-2 transition-transform duration-500">
+              <i data-lucide="users" class="w-8 h-8 text-white"></i>
+              <i data-lucide="star" class="w-4 h-4 text-yellow-300 absolute -top-1 -right-1 animate-pulse fill-current"></i>
+           </div>
+         </div>`,
+        // 2. AI (AI Tech) - 翠绿色系 + 呼吸节点
+        `<div class="relative w-16 h-16 mb-6">
+           <div class="absolute inset-0 bg-emerald-500/20 rounded-[20px] -rotate-6 group-hover:-rotate-12 transition-transform duration-500"></div>
+           <div class="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[20px] flex items-center justify-center shadow-[0_10px_20px_rgba(16,185,129,0.4)] transform group-hover:-translate-y-2 transition-transform duration-500">
+              <i data-lucide="bot" class="w-8 h-8 text-white"></i>
+              <span class="absolute top-0 right-0 flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-200 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-400 border border-white"></span>
+              </span>
+           </div>
+         </div>`,
+        // 3. 集训 (Camp) - 橙红色系 + 靶心
+        `<div class="relative w-16 h-16 mb-6">
+           <div class="absolute inset-0 bg-orange-500/20 rounded-[20px] rotate-3 group-hover:rotate-12 transition-transform duration-500"></div>
+           <div class="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-600 rounded-[20px] flex items-center justify-center shadow-[0_10px_20px_rgba(249,115,22,0.4)] transform group-hover:-translate-y-2 transition-transform duration-500">
+              <i data-lucide="flame" class="w-8 h-8 text-white"></i>
+              <i data-lucide="target" class="w-5 h-5 text-orange-200 absolute -bottom-2 -right-2"></i>
+           </div>
+         </div>`,
+        // 4. 1对1 (1-on-1) - 粉红色系 + 弹跳微光
+        `<div class="relative w-16 h-16 mb-6">
+           <div class="absolute inset-0 bg-pink-500/20 rounded-[20px] -rotate-3 group-hover:-rotate-12 transition-transform duration-500"></div>
+           <div class="absolute inset-0 bg-gradient-to-br from-pink-500 to-rose-600 rounded-[20px] flex items-center justify-center shadow-[0_10px_20px_rgba(236,72,153,0.4)] transform group-hover:-translate-y-2 transition-transform duration-500">
+              <i data-lucide="heart-handshake" class="w-8 h-8 text-white"></i>
+              <i data-lucide="sparkles" class="w-4 h-4 text-pink-200 absolute top-1 right-1 animate-bounce"></i>
+           </div>
+         </div>`
+      ];
+
+      document.getElementById('course-features-grid').innerHTML = PAGE_CONFIG.courseIntro.features.map((feat, index) => `
+        <div class="bg-white/5 rounded-3xl p-8 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group relative overflow-hidden flex flex-col h-full shadow-lg">
+           <!-- 背景微光 -->
+           <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-[50px] group-hover:bg-white/10 transition-colors pointer-events-none"></div>
+           
+           ${customIcons[index]}
+           
+           <h3 class="text-xl font-bold text-white mb-3 relative z-10">${feat.title}</h3>
+           <p class="text-sm text-gray-400 leading-relaxed mb-6 relative z-10 flex-grow">${feat.desc}</p>
+           
+           <div class="flex flex-wrap gap-2 mt-auto relative z-10">
+             ${feat.tags.map(tag => `<span class="bg-white/10 text-gray-300 text-xs px-3 py-1.5 rounded-lg border border-white/5 group-hover:border-white/20 transition-colors">${tag}</span>`).join('')}
+           </div>
+        </div>
+      `).join('');
+
+      // 确保渲染完成后，新加入的自定义带 class 的图标节点也能正常转化为 svg
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      } else {
+        console.warn("Lucide icons failed to load.");
+      }
     }
-    
-    setInterval(updateTimer, 1000);
-    updateTimer();
 
-    // 3. 弹窗控制逻辑
+    // --- 倒计时与交互逻辑 ---
+    function startTimer() {
+      const targetDate = new Date(PAGE_CONFIG.base.targetDate).getTime();
+      function updateTimer() {
+        const distance = targetDate - new Date().getTime();
+        if (distance < 0) return;
+        document.getElementById('t-days').innerText = Math.floor(distance / (1000 * 60 * 60 * 24));
+        document.getElementById('t-hours').innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+        document.getElementById('t-minutes').innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+        document.getElementById('t-seconds').innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+        
+        // 动态递增唤醒人数：与倒计时秒针同频，每秒有大概率随机增加 1~3 人
+        // 限制最大人数不超过 100,000 人
+        if (Math.random() > 0.4 && mbtiCountNum < 100000) { 
+            mbtiCountNum += Math.floor(Math.random() * 3) + 1; 
+            if (mbtiCountNum > 100000) mbtiCountNum = 100000;
+            const countEl = document.getElementById('txt-mbti-count');
+            if (countEl) countEl.innerText = mbtiCountNum.toLocaleString();
+        }
+      }
+      setInterval(updateTimer, 1000);
+      updateTimer();
+    }
+
     const wechatModal = document.getElementById('wechat-modal');
-    
-    function openWechatModal() {
-      wechatModal.classList.remove('hidden');
+    function openWechatModal() { wechatModal.classList.remove('hidden'); }
+    function closeWechatModal() { wechatModal.classList.add('hidden'); }
+
+    // 图片预览逻辑
+    const imageModal = document.getElementById('image-modal');
+    const imageModalImg = document.getElementById('image-modal-img');
+    function openImageModal(src) {
+      imageModalImg.src = src;
+      imageModal.classList.remove('hidden');
+      setTimeout(() => {
+        imageModalImg.classList.remove('scale-95');
+        imageModalImg.classList.add('scale-100');
+      }, 10);
     }
-    function closeWechatModal() {
-      wechatModal.classList.add('hidden');
+    function closeImageModal() {
+      imageModalImg.classList.remove('scale-100');
+      imageModalImg.classList.add('scale-95');
+      setTimeout(() => {
+        imageModal.classList.add('hidden');
+        imageModalImg.src = '';
+      }, 300);
     }
 
-    // 4. MBTI 测试逻辑
+    // MBTI 逻辑
     const mbtiModal = document.getElementById('mbti-modal');
     const mbtiContent = document.getElementById('mbti-content');
-    
-    const mbtiQuestions = [
-      { q: "面对长难句，你的第一反应是？", options: ["A. 结构拆解，理性分析 (T)", "B. 凭语感盲猜，主打一个随缘 (F)"] },
-      { q: "距离考研还有100天，你的复习状态？", options: ["A. 严格按计划表，精确到分钟 (J)", "B. 计划是什么？极限冲刺才刺激 (P)"] },
-      { q: "选学校时，你更看重？", options: ["A. 报录比、专业排名、就业率 (S)", "B. 校园风光、城市氛围、直觉 (N)"] }
-    ];
     let mbtiStep = 0;
+    let mbtiScore = 0;
+    let isMbtiLoading = false;
+    let loadingText = "";
 
     function renderMbtiStep() {
-      if (mbtiStep < 3) {
-        const q = mbtiQuestions[mbtiStep];
+      const mbtiCfg = PAGE_CONFIG.mbti;
+      
+      if (isMbtiLoading) {
         mbtiContent.innerHTML = `
-          <div class="flex justify-between items-center mb-8 mt-2">
-            <span class="text-purple-300 text-base font-bold">考研人格测试</span>
-            <span class="text-sm text-purple-400 bg-purple-900 px-3 py-1 rounded-full">${mbtiStep + 1} / 3</span>
+          <div class="text-center py-16 flex flex-col items-center justify-center min-h-[300px]">
+             <div class="relative w-24 h-24 mb-8">
+               <div class="absolute inset-0 border-4 border-purple-500/20 rounded-full"></div>
+               <div class="absolute inset-0 border-4 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+               <i data-lucide="dna" class="absolute inset-0 m-auto text-purple-400 w-10 h-10 animate-pulse"></i>
+             </div>
+             <p class="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300 animate-pulse text-xl font-bold tracking-widest">${loadingText}</p>
           </div>
-          <h3 class="text-2xl font-bold text-white mb-10">${q.q}</h3>
-          <div class="flex flex-col gap-5">
+        `;
+        if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+        return;
+      }
+
+      if (mbtiStep < mbtiCfg.questions.length) {
+        const q = mbtiCfg.questions[mbtiStep];
+        const pct = ((mbtiStep) / mbtiCfg.questions.length) * 100;
+        
+        mbtiContent.innerHTML = `
+          <div class="mb-8 mt-2">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-purple-300 text-sm font-bold tracking-widest">灵魂拟态解析中...</span>
+              <span class="text-xs text-purple-400 font-mono bg-purple-900/50 px-2.5 py-1 rounded">${mbtiStep + 1} / ${mbtiCfg.questions.length}</span>
+            </div>
+            <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-gradient-to-r from-purple-600 to-pink-500 h-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(236,72,153,0.5)]" style="width: ${pct}%"></div>
+            </div>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-8 leading-relaxed">${q.q}</h3>
+          <div class="flex flex-col gap-4">
             ${q.options.map(opt => `
-              <button onclick="handleMbtiAnswer()" class="w-full text-left p-5 rounded-xl bg-white/5 border border-white/10 hover:bg-purple-600/40 hover:border-purple-400 transition-colors text-base text-gray-200 cursor-pointer">
-                ${opt}
+              <button onclick="handleMbtiAnswer(${opt.score})" class="w-full text-left px-6 py-5 rounded-xl bg-white/5 border border-white/10 hover:bg-purple-600/30 hover:border-purple-400/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all text-base text-gray-200 cursor-pointer flex items-center gap-3 active:scale-[0.98]">
+                <div class="w-2 h-2 rounded-full bg-purple-500/50 flex-shrink-0"></div>
+                ${opt.text}
               </button>
             `).join('')}
           </div>
         `;
       } else {
+        const res = mbtiCfg.results.find(r => mbtiScore >= r.min && mbtiScore <= r.max) || mbtiCfg.results[0];
         mbtiContent.innerHTML = `
-          <div class="text-center py-8">
-            <div class="text-7xl mb-6">🔮</div>
-            <h3 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-orange-400 mb-4">
-              你是「INTJ 战略规划家」
-            </h3>
-            <p class="text-base text-gray-300 mb-10 leading-relaxed">
-              精准踩分，拒绝无用功！<br/>我们为你生成了一份专属高分复习策略。
-            </p>
-            <button onclick="closeMbtiModal(); openWechatModal();" class="btn-breathe w-full py-5 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full font-bold text-xl shadow-[0_0_20px_rgba(236,72,153,0.5)] cursor-pointer">
-              👉 领取开学季专属规划
-            </button>
+          <div class="text-center py-4 animate-fade-in">
+            <div class="text-7xl mb-4 filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">${res.icon}</div>
+            <h3 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-5 tracking-wide">${res.name}</h3>
+            
+            <div class="bg-white/5 p-5 rounded-2xl border border-white/10 mb-6 text-left shadow-inner">
+              <span class="text-xs text-purple-300 font-bold mb-2 flex items-center gap-1.5"><i data-lucide="fingerprint" class="w-4 h-4"></i> 灵魂素描</span>
+              <p class="text-sm text-gray-200 leading-relaxed">${res.sketch}</p>
+            </div>
+            
+            <!-- 痛点遮挡转化区 -->
+            <div class="relative bg-[#1a1125] p-5 rounded-2xl border border-red-500/20 text-left overflow-hidden">
+               <div class="blur-[5px] opacity-60 select-none pointer-events-none transition-all duration-1000">
+                 <span class="text-xs text-red-400 font-bold mb-2 flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i> 致命盲区</span>
+                 <p class="text-sm text-gray-200 leading-relaxed mb-4">${res.blindSpot}</p>
+                 <span class="text-xs text-green-400 font-bold mb-2 flex items-center gap-1.5"><i data-lucide="target" class="w-4 h-4"></i> 专属规划</span>
+                 <p class="text-sm text-gray-200 leading-relaxed">${res.actionText}</p>
+               </div>
+               
+               <!-- 悬浮解锁按钮 -->
+               <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-[#1a1125] via-[#1a1125]/80 to-transparent">
+                 <button onclick="closeMbtiModal(); openWechatModal();" class="btn-breathe bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-3.5 px-6 rounded-full shadow-[0_0_20px_rgba(239,68,68,0.4)] text-sm flex items-center gap-2 hover:scale-105 transition-transform">
+                   <i data-lucide="lock" class="w-4 h-4"></i> 解锁我的 1V1 破局规划 (免费)
+                 </button>
+               </div>
+            </div>
           </div>
         `;
+        if (typeof lucide !== 'undefined') { lucide.createIcons(); }
       }
     }
 
-    function openMbtiModal() {
-      mbtiStep = 0;
-      renderMbtiStep();
-      mbtiModal.classList.remove('hidden');
+    function openMbtiModal() { 
+      mbtiStep = 0; 
+      mbtiScore = 0;
+      isMbtiLoading = false;
+      if ('vibrate' in navigator) navigator.vibrate(50);
+      renderMbtiStep(); 
+      mbtiModal.classList.remove('hidden'); 
     }
 
-    function closeMbtiModal() {
-      mbtiModal.classList.add('hidden');
+    function closeMbtiModal() { mbtiModal.classList.add('hidden'); }
+    
+    function handleMbtiAnswer(score) { 
+      if ('vibrate' in navigator) navigator.vibrate(30);
+      mbtiScore += score;
+      mbtiStep++; 
+      
+      if (mbtiStep >= PAGE_CONFIG.mbti.questions.length) {
+        isMbtiLoading = true;
+        loadingText = "正在解析你的抗压阈值...";
+        renderMbtiStep();
+        
+        setTimeout(() => {
+          loadingText = "正在生成专属上岸侧写...";
+          renderMbtiStep();
+          
+          setTimeout(() => {
+            isMbtiLoading = false;
+            renderMbtiStep();
+          }, 1500);
+        }, 1500);
+      } else {
+        renderMbtiStep(); 
+      }
     }
 
-    function handleMbtiAnswer() {
-      mbtiStep++;
-      renderMbtiStep();
-    }
+    window.onload = () => { initPage(); startTimer(); };
   </script>
 </body>
 </html>
