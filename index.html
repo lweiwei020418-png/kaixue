@@ -648,10 +648,9 @@
           : `<span class="text-6xl mb-2 block">${t.backEmoji}</span>`;
         
         return `
-          <div class="perspective-1000 h-[320px] w-full cursor-pointer group">
-            <div class="relative w-full h-full transform-style-3d backface-hidden" onclick="flipCard(this)">
-              <!-- 正面 -->
-              <div class="card-front backface-hidden rounded-2xl p-6 flex flex-col justify-end bg-gradient-to-b ${t.frontBgColor} border border-white/20 shadow-lg overflow-hidden">
+          <div class="perspective-1000 h-[320px] w-full cursor-pointer group" onclick="this.querySelector('.transform-style-3d').classList.toggle('rotate-y-180')">
+            <div class="relative w-full h-full transform-style-3d">
+              <div class="absolute inset-0 backface-hidden rounded-2xl p-6 flex flex-col justify-end bg-gradient-to-b ${t.frontBgColor} border border-white/20 shadow-lg overflow-hidden">
                 <div class="absolute top-4 left-4 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 text-xs font-bold z-10">${t.subject}</div>
                 ${frontVisual}
                 <div class="relative z-10 pointer-events-none">
@@ -659,8 +658,7 @@
                   <p class="text-sm text-white/90">${t.desc}</p>
                 </div>
               </div>
-              <!-- 背面 -->
-              <div class="card-back backface-hidden rotate-y-180 rounded-2xl p-6 flex flex-col items-center justify-center bg-[#1e293b] border border-gray-600 shadow-lg text-center gap-2">
+              <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-6 flex flex-col items-center justify-center bg-[#1e293b] border border-gray-600 shadow-lg text-center gap-2">
                 ${backVisual}
                 <p class="text-base font-medium text-orange-300 leading-snug">"${t.quote}"</p>
               </div>
