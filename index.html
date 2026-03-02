@@ -836,10 +836,12 @@
     // 翻转卡片函数
     function flipCard(el) {
       // 适配移动端触摸/点击事件
-      if (el.style.transform === 'rotateY(180deg)') {
+      if (el.classList.contains('rotate-y-180')) {
+        el.classList.remove('rotate-y-180');
         el.style.transform = 'rotateY(0deg)';
         el.style.webkitTransform = 'rotateY(0deg)'; // 兼容webkit内核
       } else {
+        el.classList.add('rotate-y-180');
         el.style.transform = 'rotateY(180deg)';
         el.style.webkitTransform = 'rotateY(180deg)'; // 兼容webkit内核
       }
