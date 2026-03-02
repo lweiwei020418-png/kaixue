@@ -263,7 +263,7 @@
         </div>
 
         <!-- 4大核心亮点 (JS动态注入，已升级图标设计) -->
-        <div id="course-features-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 relative z-10">
+        <div id="course-features-grid" class="grid grid-cols-2 gap-6 mb-10 relative z-10">
            <!-- Grid Items -->
         </div>
 
@@ -612,7 +612,7 @@
       // 3. 老师卡片 (使用 object-contain 和 drop-shadow 保留图片完美比例并增加立体感)
       document.getElementById('teachers-container').innerHTML = PAGE_CONFIG.teachers.list.map((t) => {
         const frontVisual = t.frontImage 
-          ? `<img src="${t.frontImage}" alt="${t.name}" class="absolute bottom-0 right-0 w-[90%] h-[85%] object-contain object-bottom z-0 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105 pointer-events-none">` 
+          ? `<img src="${t.frontImage}" alt="${t.name}" loading="lazy" class="absolute bottom-0 right-0 w-[90%] h-[85%] object-contain object-bottom z-0 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105 pointer-events-none">` 
           : `<!-- 老师照片预留位设计 -->
              <div class="absolute bottom-0 right-0 w-[70%] h-[85%] bg-white/10 rounded-tl-3xl border-t border-l border-white/20 flex items-center justify-center opacity-70 z-0 backdrop-blur-sm">
                <div class="flex flex-col items-center text-white/40">
@@ -635,7 +635,7 @@
                   <p class="text-sm text-white/90">${t.desc}</p>
                 </div>
               </div>
-              <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-6 flex flex-col items-center justify-center bg-[#1e293b] border border-gray-600 shadow-lg text-center gap-2">
+              <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-6 flex flex-col items-center justify-center bg-[#1e293b] border border-gray-600 shadow-lg text-center gap-2" style="backface-visibility: hidden;">
                 ${backVisual}
                 <p class="text-base font-medium text-orange-300 leading-snug">"${t.quote}"</p>
               </div>
@@ -663,7 +663,7 @@
         const doubleImages = [...images, ...images];
         return doubleImages.map((imgSrc) => `
           <div class="h-[180px] md:h-[220px] w-auto flex-shrink-0 rounded-lg border border-white/10 overflow-hidden shadow-lg bg-black/40 flex items-center justify-center">
-            <img src="${imgSrc}" onclick="openImageModal('${imgSrc}')" class="h-full w-auto max-w-none object-contain opacity-90 hover:opacity-100 hover:scale-[1.02] transition-all duration-300 cursor-zoom-in">
+            <img src="${imgSrc}" loading="lazy" onclick="openImageModal('${imgSrc}')" class="h-full w-auto max-w-none object-contain opacity-90 hover:opacity-100 hover:scale-[1.02] transition-all duration-300 cursor-zoom-in">
           </div>
         `).join('');
       };
