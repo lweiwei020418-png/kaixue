@@ -9,17 +9,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- 引入 Lucide Icons -->
   <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
-  
-  <!-- 百度统计代码 -->
-  <script>
-    var _hmt = _hmt || [];
-    (function() {
-      var hm = document.createElement("script");
-      hm.src = "https://hm.baidu.com/hm.js?6e16c6a293f458b1719854cdce3a4d22";
-      var s = document.getElementsByTagName("script")[0];  
-      s.parentNode.insertBefore(hm, s);
-    })();
-  </script>
 
   <style>
     /* 呼吸动效 */
@@ -236,7 +225,7 @@
 
           <div class="mt-auto relative z-10">
             <!-- 升级高亮版的公开课领取按钮 (添加了气泡图标、渐变、强发光和连续扫光动画) -->
-            <button onclick="_hmt.push(['_trackEvent', '链接跳转', '点击', '公开课链接']); window.open('https://ke.study.163.com/course/detail/100162652?kyFrom=c2hpbW8ueW91ZGFvLmNvbQ==&tid=1475361492&courseId=1473682173?outVendor=kaoyan', '_blank')" class="btn-breathe relative overflow-hidden w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold text-lg rounded-xl shadow-[0_0_25px_rgba(99,102,241,0.6)] border border-indigo-300/60 transition-all flex items-center justify-center gap-2 cursor-pointer group">
+            <button onclick="window.open('https://ke.study.163.com/course/detail/100162652?kyFrom=c2hpbW8ueW91ZGFvLmNvbQ==&tid=1475361492&courseId=1473682173?outVendor=kaoyan', '_blank')" class="btn-breathe relative overflow-hidden w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold text-lg rounded-xl shadow-[0_0_25px_rgba(99,102,241,0.6)] border border-indigo-300/60 transition-all flex items-center justify-center gap-2 cursor-pointer group">
               <!-- 扫光元素 -->
               <div class="absolute inset-0 w-1/4 h-full bg-white/30 skew-x-[-15deg] animate-sweep pointer-events-none"></div>
               <i data-lucide="gift" class="w-5 h-5 text-yellow-300 animate-pulse"></i>
@@ -375,16 +364,22 @@
         heroMainTitle: "只争朝夕",
         heroSubTitle: "网易有道考研开学季",
         heroDesc: "此站上岸｜开学考研蓄力计划已开启",
-        targetDate: "2026-03-31T23:59:59", 
+        targetDate: "2026/03/31 23:59:59",  // 修改为对 Safari 更友好的格式
         timerLabel: "距开学季超值福利下线仅剩",
       },
 
-      // 2. MBTI 测试模块配置
+      // 2. MBTI 测试模块配置 (已更新真实累积算法配置)
       mbti: {
         title: "考研开学季·隐藏人格测试",
         desc: "考研，是一场在黑暗中重塑自我的漫长进化。<br/>测测你的【隐藏备考人格】是哪种动物？",
         buttonText: "直接唤醒",
-        participantCount: "100", // <-- 修改了初始唤醒人数基数为 100
+        
+        /* 真实时间累计算法配置（实现跨设备/用户的一致性持续增长） */
+        participantStartCount: 100,             // 起始总人数
+        participantTargetCount: 100000,         // 目标总人数 (10万)
+        participantStartDate: "2026/03/02 00:00:00", // 累计开始日期
+        participantEndDate: "2026/03/31 23:59:59",   // 累计结束日期
+
         questions: [
           { 
             q: "【动机】决定考研的那一刻，你的核心驱动力是？", 
@@ -555,8 +550,6 @@
   <!-- 💻 渲染引擎 -->
   <!-- ========================================== -->
   <script>
-    let mbtiCountNum = parseInt(PAGE_CONFIG.mbti.participantCount.replace(/,/g, ''), 10);
-
     function initPage() {
       // 1. 文本映射
       const map = {
@@ -570,7 +563,6 @@
         'txt-mbti-title': PAGE_CONFIG.mbti.title,
         'txt-mbti-desc': PAGE_CONFIG.mbti.desc,
         'txt-mbti-btn': PAGE_CONFIG.mbti.buttonText,
-        'txt-mbti-count': mbtiCountNum.toLocaleString(), // 初始渲染数字
 
         'txt-team-title': PAGE_CONFIG.teachers.title,
         'txt-team-subtitle': PAGE_CONFIG.teachers.subtitle,
@@ -610,7 +602,7 @@
         document.getElementById('app-body').style.backgroundImage = `url(${PAGE_CONFIG.base.pageBgImage})`;
       }
       const qrHtml = PAGE_CONFIG.wechat.qrCodeImage 
-        ? `<img src="${PAGE_CONFIG.wechat.qrCodeImage}" alt="微信二维码" class="w-full h-full object-cover rounded-lg cursor-pointer" onclick="_hmt.push(['_trackEvent', '二维码', '扫描', '微信二维码'])">`
+        ? `<img src="${PAGE_CONFIG.wechat.qrCodeImage}" alt="微信二维码" class="w-full h-full object-cover rounded-lg">`
         : `<span class="text-5xl">📱</span><span class="text-sm font-bold text-center">待上传<br>企微二维码</span>`;
       
       const qrDisplayArea = document.getElementById('qr-display-area');
@@ -750,24 +742,44 @@
 
     // --- 倒计时与交互逻辑 ---
     function startTimer() {
-      const targetDate = new Date(PAGE_CONFIG.base.targetDate).getTime();
+      // 获取活动目标下线时间
+      const targetDateStr = PAGE_CONFIG.base.targetDate;
+      const targetDate = new Date(targetDateStr).getTime();
+      
+      // 获取用于累计人数算法的时间点和人数
+      const startT = new Date(PAGE_CONFIG.mbti.participantStartDate).getTime();
+      const endT = new Date(PAGE_CONFIG.mbti.participantEndDate).getTime();
+      const startC = PAGE_CONFIG.mbti.participantStartCount;
+      const endC = PAGE_CONFIG.mbti.participantTargetCount;
+
       function updateTimer() {
-        const distance = targetDate - new Date().getTime();
-        if (distance < 0) return;
-        document.getElementById('t-days').innerText = Math.floor(distance / (1000 * 60 * 60 * 24));
-        document.getElementById('t-hours').innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-        document.getElementById('t-minutes').innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-        document.getElementById('t-seconds').innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+        const now = new Date().getTime();
+        const distance = targetDate - now;
         
-        // 动态递增唤醒人数：与倒计时秒针同频，每秒有大概率随机增加 1~3 人
-        // 限制最大人数不超过 100,000 人
-        if (Math.random() > 0.4 && mbtiCountNum < 100000) { 
-            mbtiCountNum += Math.floor(Math.random() * 3) + 1; 
-            if (mbtiCountNum > 100000) mbtiCountNum = 100000;
-            const countEl = document.getElementById('txt-mbti-count');
-            if (countEl) countEl.innerText = mbtiCountNum.toLocaleString();
+        // 更新页面倒计时
+        if (distance >= 0) {
+          document.getElementById('t-days').innerText = Math.floor(distance / (1000 * 60 * 60 * 24));
+          document.getElementById('t-hours').innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+          document.getElementById('t-minutes').innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+          document.getElementById('t-seconds').innerText = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
         }
+
+        // ==========================================
+        // 根据时间进度平滑、确定性地计算当前总参与人数
+        // ==========================================
+        let currentCount = startC;
+        if (now >= endT) {
+            currentCount = endC;
+        } else if (now > startT) {
+            const progress = (now - startT) / (endT - startT);
+            // 线性插值，随着时间稳定推移上涨
+            currentCount = Math.floor(startC + progress * (endC - startC));
+        }
+
+        const countEl = document.getElementById('txt-mbti-count');
+        if (countEl) countEl.innerText = currentCount.toLocaleString();
       }
+      
       setInterval(updateTimer, 1000);
       updateTimer();
     }
