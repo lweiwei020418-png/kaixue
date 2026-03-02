@@ -835,14 +835,16 @@
 
     // 翻转卡片函数
     function flipCard(el) {
-      // 适配移动端触摸/点击事件
-      const currentTransform = el.style.transform || '';
-      if (currentTransform.includes('rotateY(180deg)')) {
+      // 获取当前的 transform 样式值
+      const currentTransform = getComputedStyle(el).transform;
+      // 判断当前卡片是否已翻转 (检查 transform 矩阵或内联样式)
+      // 如果 matrix3d 的第一个值是 -1，或者内联样式包含 rotateY(180deg)，则判定为已翻转
+      if (currentTransform.includes('matrix3d') && currentTransform.includes('-1')) {
         el.style.transform = 'rotateY(0deg)';
-        el.style.webkitTransform = 'rotateY(0deg)'; // 兼容webkit内核
+        el.style.webkitTransform = 'rotateY(0deg)';
       } else {
         el.style.transform = 'rotateY(180deg)';
-        el.style.webkitTransform = 'rotateY(180deg)'; // 兼容webkit内核
+        el.style.webkitTransform = 'rotateY(180deg)';
       }
     }
 
