@@ -263,7 +263,7 @@
         </div>
 
         <!-- 4大核心亮点 (JS动态注入，已升级图标设计) -->
-        <div id="course-features-grid" class="grid grid-cols-2 gap-6 mb-10 relative z-10">
+        <div id="course-features-grid" class="grid grid-cols-1 gap-6 mb-10 relative z-10">
            <!-- Grid Items -->
         </div>
 
@@ -627,7 +627,7 @@
         return `
           <div class="perspective-1000 h-[320px] w-full cursor-pointer group" onclick="this.querySelector('.transform-style-3d').classList.toggle('rotate-y-180')">
             <div class="relative w-full h-full transform-style-3d">
-              <div class="absolute inset-0 backface-hidden rounded-2xl p-6 flex flex-col justify-end bg-gradient-to-b ${t.frontBgColor} border border-white/20 shadow-lg overflow-hidden">
+              <div class="absolute inset-0 backface-hidden rounded-2xl p-6 flex flex-col justify-end bg-gradient-to-b ${t.frontBgColor} border border-white/20 shadow-lg overflow-hidden" style="backface-visibility: hidden;">
                 <div class="absolute top-4 left-4 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 text-xs font-bold z-10">${t.subject}</div>
                 ${frontVisual}
                 <div class="relative z-10 pointer-events-none">
