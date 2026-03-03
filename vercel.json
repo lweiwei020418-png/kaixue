@@ -1,4 +1,8 @@
 {
+  "build": {
+    "command": ""
+  },
+  "outputDirectory": ".",
   "headers": [
     {
       "source": "/(.*)",
@@ -6,13 +10,8 @@
         {
           "key": "Access-Control-Allow-Origin",
           "value": "*"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "ALLOW-FROM https://tongji.baidu.com"
         }
       ]
     }
-  ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  ]
 }
